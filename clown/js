@@ -1,0 +1,450 @@
+var pink = new THREE.MeshBasicMaterial({
+  color: "#f030d8"
+});
+var lightPink = new THREE.MeshBasicMaterial({
+  color: "#ffa5e8"
+});
+var blue = new THREE.MeshBasicMaterial({
+  color: "#00a8fe"
+});
+var lightBlue = new THREE.MeshBasicMaterial({
+  color: "#b3ffff"
+});
+var green = new THREE.MeshBasicMaterial({
+  color: "#19efb2"
+});
+var black = new THREE.MeshBasicMaterial({
+  color: "#000000"
+});
+var purple = new THREE.MeshBasicMaterial({
+  color: "#442669"
+});
+
+function createBrim(params) {
+  var brimGeometry = new THREE.CylinderGeometry(1, 4, 1, 32);
+  var brimMesh = new THREE.Mesh(brimGeometry, blue);
+  return brimMesh;
+}
+
+function addBrim(head, params) {
+  var brimframe = new THREE.Object3D();
+  var brim = createBrim(params);
+  var radius = params.headRadius || 2;
+  brim.position.y = radius * .9;
+  brimframe.add(brim);
+  var angle = params.brimRotation || TW.degrees2radians(90);
+  head.add(brimframe);
+  return head;
+}
+
+function createCap(params) {
+  var sd = params.sphereDetail || 10;
+  var topRadius = params.headRadius || 2;
+  var bottomRadius = params.headRadius * .7 || 2;
+  var height = params.headRadius * 2 || 2;
+  var capGeometry = new THREE.CylinderGeometry(
+    topRadius, bottomRadius, height, 32);
+  var capMesh = new THREE.Mesh(capGeometry, blue);
+  return capMesh;
+}
+
+function addCap(head, params) {
+  var capframe = new THREE.Object3D();
+  var cap = createCap(params);
+  var radius = params.headRadius || 2;
+  cap.position.y = radius;
+  capframe.add(cap);
+  head.add(capframe);
+  return head;
+}
+
+function createNose(params) {
+  var sd = params.sphereDetail || 10;
+  var radius = params.noseRadius || 0.18;
+  var noseGeometry = new THREE.SphereGeometry(radius, sd, sd);
+  var noseMesh = new THREE.Mesh(noseGeometry, purple);
+  return noseMesh;
+}
+
+function addNose(head, params) {
+  /* adds a nose to the head. It's placed by creating a composite object
+   * centered in the middle of the head, and positioning the nose at the
+   * head radius on +Z, then rotating around X by a little. */
+  var noseframe = new THREE.Object3D();
+  var nose = createNose(params);
+  var radius = params.headRadius || 2;
+  nose.position.z = radius; // within the noseframe
+  noseframe.add(nose);
+  var angle = params.noseRotation || TW.degrees2radians(10);
+  noseframe.rotation.x = angle;
+  head.add(noseframe);
+  return head;
+}
+
+function createMouth(params) {
+  var sd = params.sphereDetail || 10;
+  var radius = params.mouthRadius || 10;
+  var mouthGeometry = new THREE.TorusGeometry(2, .2, sd,
+    sd, Math.PI * .3);
+  var mouth = new THREE.Mesh(mouthGeometry, lightPink);
+  // mouth.scale.z = params.earScale || 0.5;
+  return mouth;
+}
+
+function addMouth(head, params) {
+
+  var mouthframe = new THREE.Object3D();
+  var mouth = createMouth(params);
+  var radius = params.headRadius || 2;
+  mouth.position.z = radius * .8;
+  mouth.position.x = -radius * .2;
+  mouthframe.add(mouth);
+  var angle = params.mouthRotation || TW.degrees2radians(260);
+  mouthframe.rotation.z = angle;
+  head.add(mouthframe);
+  return head;
+
+}
+
+function createEar(params) {
+  // side is 1 (right) or -1 (left)
+  var sd = params.sphereDetail || 10;
+  var radius = params.earRadius || 0.6;
+  var earGeometry = new THREE.SphereGeometry(radius, sd, sd);
+  var ear = new THREE.Mesh(earGeometry, purple);
+  //Flattens the sphere to make it look more like a flat disk
+  ear.scale.z = params.earScale || 0.5;
+  return ear;
+}
+
+function addEar(head, params, side) {
+  /* adds an ear to the head on the right (side=1) or left
+   * (side=-1). The center of the ear is flush with the surface of the
+   * head by moving it out by the radius, and rotating it around the z
+   * axis to get it to the desired height. */
+  var earframe = new THREE.Object3D();
+  var ear = createEar(params);
+  var radius = params.headRadius || 2;
+  var angle = params.earAngle || Math.PI / 4;
+  ear.position.x = side * radius; // within the earframe
+  earframe.rotation.z = side * angle;
+  earframe.add(ear);
+  head.add(earframe);
+  return head;
+}
+// create shoulder
+function createShoulder(params) {
+  // side is 1 (right) or -1 (left)
+  var sd = params.sphereDetail || 10;
+  var radius = params.shoulderRadius || 0.6;
+  var shoulderGeometry = new THREE.SphereGeometry(radius, sd, sd);
+  var shoulder = new THREE.Mesh(shoulderGeometry, pink);
+  return shoulder;
+}
+
+function addShoulder(clown, params, side) {
+  var shoulderframe = new THREE.Object3D();
+  var shoulder = createShoulder(params);
+  var radius = params.shoulderRadius || 1;
+  shoulder.position.x = side * radius * 2.6; // within the shoulderframe
+  shoulder.position.y = radius * 2.6;
+  shoulderframe.add(shoulder);
+  clown.add(shoulderframe);
+  return clown;
+}
+
+function createEye(params) {
+  var sd = params.sphereDetail || 10;
+  var radius = params.eyeRadius || 0.2;
+  var eyeGeometry = new THREE.SphereGeometry(radius, sd, sd);
+  var eyeMesh = new THREE.Mesh(eyeGeometry, purple);
+  return eyeMesh;
+}
+
+function addEye(head, params, side) {
+  /* adds an eye to the head on the right (side=1) or left
+   * (side=-1). The center of the eye is flush with the surface of the
+   * head by moving it out along the z axis by the radius, and rotating
+   * it around the x and then y axes to get it to the desired height. */
+  var eyeframe = new THREE.Object3D();
+  var eye = createEye(params);
+  var radius = params.headRadius || 2;
+  eye.position.z = radius; // within the eyeframe
+  var angleX = params.eyeAngleX || -Math.PI / 6;
+  var angleY = params.eyeAngleY || Math.PI / 6;
+  eyeframe.rotation.x = angleX;
+  eyeframe.rotation.y = side * angleY;
+  eyeframe.add(eye);
+  head.add(eyeframe);
+  return head;
+}
+
+function createHead(params) {
+  /* Returns a teddy clown head object, with origin in the center, and
+   * eyes on the +Z side of the head, and ears on the left (-X) and
+   * right (+X) sides. */
+  var head = new THREE.Object3D();
+
+  var sd = params.sphereDetail || 10;
+  var radius = params.headRadius || 2;
+  var headGeometry = new THREE.SphereGeometry(radius, sd, sd);
+  var headMesh = new THREE.Mesh(headGeometry, lightBlue);
+  head.add(headMesh);
+  if (params.nose) {
+    addNose(head, params);
+  }
+  if (params.ears) {
+    addEar(head, params, 1);
+    addEar(head, params, -1);
+  }
+  if (params.eyes) {
+    addEye(head, params, 1);
+    addEye(head, params, -1);
+  }
+  if (params.mouth) {
+    addMouth(head, params);
+  }
+  addBrim(head, params);
+  addCap(head, params);
+  return head;
+}
+
+function createLeg(radiusTop, radiusBottom, length, params) {
+  /* returns an Object with the center at the top and the negative Y
+   * axis running down the center. */
+  var limb = new THREE.Object3D();
+  var cd = params.cylinderDetail || 10;
+  // console.log("cd is "+cd);
+  // Turns out there's an error in Three.js if cd is a non-integer
+  var limbGeom = new THREE.CylinderGeometry(radiusTop, radiusBottom, length, cd);
+  var limbMesh = new THREE.Mesh(limbGeom, pink);
+  limbMesh.position.y = -length / 2;
+  limb.add(limbMesh);
+  return limb;
+}
+
+function createHand(params) {
+  // side is 1 (right) or -1 (left)
+  var sd = params.sphereDetail || 10;
+  var radius = params.handRadius || 0.6;
+  var handGeometry = new THREE.SphereGeometry(radius, sd, sd);
+  var hand = new THREE.Mesh(handGeometry, green);
+  return hand;
+}
+
+function addHand(clown, params, side) {
+  var handframe = new THREE.Object3D();
+  var hand = createHand(params);
+  var radius = params.handRadius || 1;
+  hand.position.x = side * radius * 5.5; // within the handframe
+  hand.position.y = -radius * 1.8;
+  handframe.add(hand);
+  clown.add(handframe);
+  return clown;
+}
+
+function createArm(params) {
+  /* returns an Object with the center at the shoulder and the negative
+   * Y axis running down the center. */
+  var arm = new THREE.Object3D();
+  var top = params.armRadiusTop || 0.7;
+  var bot = params.armRadiusBottom || 0.6;
+  var len = params.armLength || 4;
+  var cd = params.cylinderDetail || 5;
+  // console.log("cd is "+cd);
+  // Turns out there's an error in Three.js if cd is a non-integer
+  var armGeom = new THREE.CylinderGeometry(top, bot, len, cd);
+  var armMesh = new THREE.Mesh(armGeom, blue);
+  armMesh.position.y = -len / 2;
+  arm.add(armMesh);
+  return arm;
+}
+
+function addArm(clown, params, side) {
+  /* adds an arm to the clown on the right (side=1) or left (side=-1). */
+  var arm = createArm(params);
+  var radius = params.bodyRadius || 3;
+  var scale = params.bodyScaleY || 2;
+  var sx = params.shoulderWidth || radius * 0.9;
+  var sy = params.shoulderHeight || scale * radius * 0.6;
+  // console.log("adding arms at "+sx+","+sy);
+  arm.position.set(side * sx, sy, 0);
+  arm.rotation.z = side * Math.PI / 5;
+  clown.add(arm);
+  clown = addShoulder(clown, params, side);
+  clown = addHand(clown, params, side);
+  return clown;
+}
+
+function createFeet(params) {
+  // side is 1 (right) or -1 (left)
+  var sd = params.sphereDetail || 10;
+  var radius = params.feetRadius || 0.6;
+  var feetGeometry = new THREE.SphereGeometry(radius, sd, sd, 0, Math.PI * 2, 0, Math.PI / 2);
+  var feet = new THREE.Mesh(feetGeometry, green);
+  return feet;
+}
+
+function addFeet(clown, params, side) {
+  var feetframe = new THREE.Object3D();
+  var feet = createFeet(params);
+  var radius = params.feetRadius || 1;
+  feet.position.x = side * radius; // within the feetframe
+  feet.position.y = -radius * 8;
+  feetframe.add(feet);
+  clown.add(feetframe);
+  return clown;
+}
+
+function addLeg(clown, params, side) {
+  /* adds a leg to the clown on the right (side=1) or left (side=-1). */
+  var top = params.legRadiusTop || 0.7;
+  var bot = params.legRadiusBottom || 0.6;
+  var len = params.legLength || 5;
+  var leg = createLeg(top, bot, len, params);
+  leg.name = (side == 1 ? "right leg" : "left leg");
+  var radius = params.bodyRadius || 3;
+  var scale = params.bodyScaleY || 2;
+  var hx = side * params.hipWidth || side * radius * 0.1;
+  var hy = params.hipHeight || scale * radius * -0.1;
+  console.log("adding " + leg.name + " at " + hx + "," + hy);
+  leg.position.set(hx, hy, 0);
+  console.log("rotating to " + params.legRotationZ);
+  leg.rotation.x = params.legRotationX;
+  leg.rotation.z = side * params.legRotationZ;
+  clown.add(leg);
+  addFeet(clown, params, side);
+}
+
+function createBody(params) {
+  var body = new THREE.Object3D();
+  var radius = params.bodyRadius || 3;
+  var sd = params.sphereDetail || 10;
+  var bodyGeom = new THREE.SphereGeometry(radius, sd, sd);
+  var bodyMesh = new THREE.Mesh(bodyGeom, blue);
+  var scale = params.bodyScaleY || 1;
+  bodyMesh.scale.y = scale;
+  body.add(bodyMesh);
+  if (params.arms) {
+    addArm(body, params, 1);
+    addArm(body, params, -1);
+  }
+  if (params.legs) {
+    console.log("adding legs");
+    addLeg(body, params, 1);
+    addLeg(body, params, -1);
+  }
+  return body;
+}
+
+function createClown(params) {
+  var clown = new THREE.Object3D();
+  var body = createBody(params);
+  clown.add(body);
+  if (params.head) {
+    var head = createHead(params);
+    var bs = params.bodyScaleY || 2;
+    var br = params.bodyRadius || 2;
+    var hr = params.headRadius || 1;
+    // calculate position for the center of the head
+    head.position.y = bs * br + hr;
+    clown.add(head);
+  }
+  return clown;
+}
+
+
+var params = {
+  wireframe: false,
+  sphereDetail: 10,
+  cylinderDetail: 10,
+  nose: true,
+  noseRadius: 0.2,
+  noseRotation: TW.degrees2radians(3),
+  mouth: true,
+  mouthRadius: 233,
+  noseRotation: TW.degrees2radians(5),
+  ears: true,
+  earRadius: 0.8,
+  earScale: 0.7,
+  earAngle: Math.PI / 10,
+  shoulders: true,
+  shoulderRadius: 1,
+  handRadius: 1,
+  feetRadius: 1,
+  eyes: true,
+  eyeRadius: 0.3,
+  eyeAngleX: -Math.PI / 10,
+  eyeAngleY: +Math.PI / 10,
+  arms: true,
+  armLength: 4.4,
+  armRadiusTop: 0.6,
+  armRadiusBottom: 0.6,
+  legs: true,
+  legRadiusTop: 0.6,
+  legRadiusBottom: 0.6,
+  legLength: 5,
+  legRotationX: -TW.degrees2radians(0),
+  legRotationZ: TW.degrees2radians(0),
+  hipWidth: 1,
+  hipHeight: -3,
+  head: true,
+  headRadius: 2.5,
+  bodyRadius: 3,
+  bodyScaleY: 1.3,
+  noop: "last param"
+};
+
+
+// We always need a scene.
+var scene = new THREE.Scene();
+
+// ====================================================================
+
+/* Next, we create objects in our scene. Here, just a box and barn. The
+center of the box is the origin, so, for example, the x coordinates go
+from -2 to +2. Delete these and put your code here.  */
+
+
+
+// ================================================================
+//
+// We always need a renderer
+
+var renderer = new THREE.WebGLRenderer();
+
+var clown = createClown(params);
+scene.add(clown);
+
+TW.cameraSetup(renderer,
+  scene, {
+    minx: -5,
+    maxx: 5,
+    miny: -10,
+    maxy: 15,
+    minz: -5,
+    maxz: 5
+  });
+TW.toggleAxes("show");
+
+
+var render = TW.lastClickTarget.TW_state.render;
+
+TW.setKeyboardCallback("w",
+  function() {
+    wireframe = !wireframe;
+    blue.wireframe = wireframe;
+    lightBlue.wireframe = wireframe;
+    render();
+  },
+  "toggle wireframe");
+
+function rebuild() {
+  wireframe = params.wireframe;
+  blue.wireframe = wireframe;
+  lightBlue.wireframe = wireframe;
+  scene.remove(clown);
+  clown = createClown(params);
+  scene.add(clown);
+  render();
+}
